@@ -33,13 +33,13 @@ re.findall(r"([T][A][AT])", string1)
 
 Now, let's see what R and python can do together. First, I define a dataset in R. I chose a dataset that contains the number of new discoveries each year. Then, in Python, I found the mean number of discoveries by year.
 ``` {R}
-#This is in R
+#This part is in R
 library(reticulate)
 discoveries <- data.frame(discoveries)
 ```
 
 
 ``` {python}
-#This is in python
+#This part is in python
 r.discoveries.mean()
 ```
