@@ -1,0 +1,45 @@
+---
+title: "My Blog"
+author: 'Me'
+date: '2020-12-09'
+description: ''
+slug: my-blog
+tags: []
+categories: []
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE)
+```
+
+# Python and R
+
+Python and R use different coding languages but are still able to talk to each other. In this post, I'll show you how! But first, here's a picture of some penguins.
+
+![](/post/2015-07-23-r-rmarkdown_files/penguins.jpg){height=40%, width=50%}
+
+## Python
+
+To start off, let's do some coding in python. In the code below, there is a segment of DNA, we are going to find the number of possible times the amino acid tyrosine is found in this sequence (depending on the reading frame of the DNA). The codon for tyrosine is TAT or TAC.
+
+``` {python}
+import re
+string1="ATGGCAATAACCCCCCGTTTCTACTTCTAGAGGAGAAAAGTATTGACATGAGCGCTCCCGGCACAAGGGCCAAAGAAGTCTCCAATTTCTTATTTCCGAATGACATGCGTCTCCTTGCGGGTAAATCACCGACCGCAATTCATAGAAGCCTGGGGGAACAGATAGGTCTAATTAGCTTAAGAGAGTAAATCCTGGGATCATTCAGTAGTAACCATAAACTTACGCTGGGGCTTCTTCGGCGGATTTTTACAGTTACCAACCAGGAGATTTGAAGTAAATCAGTTGAGGATTTAGCCGCGCTATCCGGTAATCTCCAAATTAAAACATACCGTTCCATGAAGGCTAGAATTACTTACCGGCCTTTTCCATGCCTGCGCTATACCCCCCCACTCTCCCGCTTATCCGTCCGAGCGGAGGCAGTGCGATCCTCCGTTAAGATATTCTTACGTGTGACGTAGCTATGTATTTTGCAGAGCTGGCGAACGCGTTGAACACTTCACAGATGGTAGGGATTCGGGTAAAGGGCGTATAATTGGGGACTAACATAGGCGTAGACTACGATGGCGCCAACTCAATCGCAGCTCGAGCGCCCTGAATAACGTACTCATCTCAACTCATTCTCGGCAATCTACCGAGCGACTCGATTATCAACGGCTGTCTAGCAGTTCTAATCTTTTGCCAGCATCGTAATAGCCTCCAAGAGATTGATGATAGCTATCGGCACAGAACTGAGACGGCGCCGATGGATAGCGGACTTTCGGTCAACCACAATTCCCCACGGGACAGGTCCTGCGGTGCGCATCACTCTGAATGTACAAGCAACCCAAGTGGGCCGAGCCTGGACTCAGCTGGTT"
+
+re.findall(r"([T][A][AT])", string1)
+```
+
+## R and Python
+
+Now, let's see what R and python can do together. First, I define a dataset in R. I chose a dataset that contains the number of new discoveries each year. Then, in Python, I found the mean number of discoveries by year.
+``` {R}
+#This is in R
+library(reticulate)
+discoveries <- data.frame(discoveries)
+```
+
+
+``` {python}
+#This is in python
+r.discoveries.mean()
+```

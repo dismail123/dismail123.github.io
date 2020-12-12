@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Deena Ismail" />
+    
+    <link rel="shortcut icon" type="image/x-icon" href="../../img/favicon.ico">
+    <title>Project 1</title>
+    <meta name="generator" content="Hugo 0.79.0" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../../css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="../../"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="../../post/">BLOG</a></li>
+        
+        <li><a href="../../projects/">PROJECTS</a></li>
+        
+        <li><a href="../../resume.pdf">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="../../project/project1/">Project 1</a></strong>
+          </h3>
+        </div>
+ 
+<div class="blog-title">
+          <h4>
+         December 5, 2020 
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+
+
+<div id="r-markdown" class="section level2">
+<h2>R Markdown</h2>
+<p>This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <a href="http://rmarkdown.rstudio.com" class="uri">http://rmarkdown.rstudio.com</a>.</p>
+<p>When you click the <strong>Knit</strong> button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:</p>
+<pre class="r"><code># Loading Data
+Agression &lt;- read.csv(&quot;Agression.csv&quot;, header = FALSE)
+
+HPHouse &lt;- read.csv(&quot;HPHouse.csv&quot;, header = FALSE, 
+    na.strings = c(&quot;&quot;, &quot;NA&quot;))
+
+SDS348_Project1 &lt;- read.csv(&quot;SDS348_Project1.csv&quot;, 
+    header = FALSE)
+Book_Mentions &lt;- SDS348_Project1
+
+Film_Lines &lt;- read.csv(&quot;Film_Lines.csv&quot;, header = FALSE)</code></pre>
+<p>Introduction:</p>
+<p>For my project, I chose to find datasets from the Harry Potter books and films. I was inspired after seeing a tweet about how the actor for Draco Malfoy was only present for less than 20 minutes of all eight movies. The Book_Mentions dataset contains a list of 100 characters and the number of times they were mentioned in all seven books. The Film_Lines dataset contains 50 characters and the number of lines they have in the films. The HP_House dataset had a list of 141 characters and the Hogwarts house they were placed in. There was a good amount of characters who did not have a house, whether because it was never stated in the books or because they did not attend Hogwarts. The last dataset was Instances_of_Aggression, which had a list of 104 characters who had at least one moment where they showed aggression and the number of times they exhibited an aggressive behavior. All the datasets were found online and compiled into spreadsheets by fans of the franchise. I then selected the specific datasets I was interested in determining the relationships for to use in my project. As a fan of Harry Potter myself, I was interested in the relationships I would find between each character's house, number of mentions in the books, number of lines in the films, and number of times they showed aggressiveness in the books. I expected to find a positive correlation between number of mentions in the book and number of lines in the films because the more important a character is to the plot of the books, the more likely they would be important to the plot of the movies. I also expected to find that characters who were in the Slytherin house would have a greater number of instances of aggression since Slytherin characters were more known for having aggressive traits.</p>
+<pre class="r"><code># Making data tidy
+library(tidyverse)
+
+Book_Mentions &lt;- Book_Mentions[-c(1), ]  #needed to remove an empty first row
+Book_Mentions &lt;- Book_Mentions %&gt;% rename(Character = V1, 
+    Mentions = V2)
+nrow(Book_Mentions)</code></pre>
+<pre><code>## [1] 100</code></pre>
+<pre class="r"><code>Aggression &lt;- Agression[-c(1), ]
+Aggression &lt;- Agression %&gt;% rename(Character = V1, 
+    Instances_of_Aggression = V2)
+nrow(Aggression)</code></pre>
+<pre><code>## [1] 104</code></pre>
+<pre class="r"><code>Film_Lines &lt;- Film_Lines[-c(3, 4, 5)]
+Film_Lines &lt;- Film_Lines[-c(51:86), ]
+Film_Lines &lt;- Film_Lines %&gt;% rename(Number_of_Lines = V1, 
+    Character = V2)
+nrow(Film_Lines)</code></pre>
+<pre><code>## [1] 50</code></pre>
+<pre class="r"><code>HPHouse &lt;- HPHouse %&gt;% rename(Character = V1, House = V2)
+HP_House &lt;- HPHouse[-c(143:507), ]
+nrow(HP_House)</code></pre>
+<pre><code>## [1] 142</code></pre>
+<pre class="r"><code># Joining the data, using left_join so that
+# everything is joined by book mentions
+pt1 &lt;- left_join(Book_Mentions, HP_House, by = &quot;Character&quot;)
+nrow(pt1)</code></pre>
+<pre><code>## [1] 102</code></pre>
+<pre class="r"><code>pt2 &lt;- left_join(pt1, Film_Lines, by = &quot;Character&quot;)
+nrow(pt2)</code></pre>
+<pre><code>## [1] 102</code></pre>
+<pre class="r"><code>joined &lt;- left_join(pt2, Aggression, by = &quot;Character&quot;) %&gt;% 
+    glimpse()</code></pre>
+<pre><code>## Rows: 102
+## Columns: 5
+## $ Character               &lt;fct&gt; Harry Potter, Ron Weasley, Hermione Granger, …
+## $ Mentions                &lt;fct&gt; &quot;18,956&quot;, &quot;6,464&quot;, &quot;5,486&quot;, &quot;2,421&quot;, &quot;1,956&quot;,…
+## $ House                   &lt;fct&gt; Gryffindor, Gryffindor, Gryffindor, Gryffindo…
+## $ Number_of_Lines         &lt;int&gt; 1540, 728, 682, 324, 131, 134, 195, 96, 111, …
+## $ Instances_of_Aggression &lt;int&gt; 160, 35, 67, 24, 28, 61, 3, 21, 6, 6, 7, 9, 9…</code></pre>
+<pre class="r"><code>head(joined)</code></pre>
+<pre><code>##          Character Mentions      House Number_of_Lines Instances_of_Aggression
+## 1     Harry Potter   18,956 Gryffindor            1540                     160
+## 2      Ron Weasley    6,464 Gryffindor             728                      35
+## 3 Hermione Granger    5,486 Gryffindor             682                      67
+## 4 Albus Dumbledore    2,421 Gryffindor             324                      24
+## 5    Severus Snape    1,956  Slytherin             131                      28
+## 6        Voldemort    1,797  Slytherin             134                      61</code></pre>
+<pre class="r"><code># There were 103 rows but Book_Mentions dataset
+# only had 100 distinct characters
+final_joined &lt;- unique(joined)
+final_joined$Mentions &lt;- gsub(&quot;,&quot;, &quot;&quot;, final_joined$Mentions)
+head(final_joined)</code></pre>
+<pre><code>##          Character Mentions      House Number_of_Lines Instances_of_Aggression
+## 1     Harry Potter    18956 Gryffindor            1540                     160
+## 2      Ron Weasley     6464 Gryffindor             728                      35
+## 3 Hermione Granger     5486 Gryffindor             682                      67
+## 4 Albus Dumbledore     2421 Gryffindor             324                      24
+## 5    Severus Snape     1956  Slytherin             131                      28
+## 6        Voldemort     1797  Slytherin             134                      61</code></pre>
+<pre class="r"><code># Showing use of pivot_wider and pivot_longer
+wide &lt;- final_joined %&gt;% pivot_wider(1, names_from = &quot;Character&quot;, 
+    values_from = &quot;Instances_of_Aggression&quot;) %&gt;% arrange()
+head(wide)</code></pre>
+<pre><code>## # A tibble: 1 x 100
+##   `Harry Potter` `Ron Weasley` `Hermione Grang… `Albus Dumbledo… `Severus Snape`
+##            &lt;int&gt;         &lt;int&gt;            &lt;int&gt;            &lt;int&gt;           &lt;int&gt;
+## 1            160            35               67               24              28
+## # … with 95 more variables: Voldemort &lt;int&gt;, `Rubeus Hagrid` &lt;int&gt;, `Draco
+## #   Malfoy` &lt;int&gt;, `Fred Weasley` &lt;int&gt;, `George Weasley` &lt;int&gt;, `Ginny
+## #   Weasley` &lt;int&gt;, `Sirius Black` &lt;int&gt;, `Minerva McGonagall` &lt;int&gt;, `Neville
+## #   Longbottom` &lt;int&gt;, `James Potter` &lt;int&gt;, `Lily Potter` &lt;int&gt;, `Remus
+## #   Lupin` &lt;int&gt;, `Luna Lovegood` &lt;int&gt;, `Lucius Malfoy` &lt;int&gt;, `Molly
+## #   Weasley` &lt;int&gt;, `Bellatrix Lestrange` &lt;int&gt;, `Peter Pettigrew` &lt;int&gt;,
+## #   `Percy Weasley` &lt;int&gt;, `Arthur Weasley` &lt;int&gt;, `Alastor Moody` &lt;int&gt;,
+## #   `Cedric Diggory` &lt;int&gt;, `Katie Bell` &lt;int&gt;, Dobby &lt;int&gt;, `Bill
+## #   Weasley` &lt;int&gt;, `Cho Chang` &lt;int&gt;, `Dudley Dursley` &lt;int&gt;, `Viktor
+## #   Krum` &lt;int&gt;, `Dolores Umbridge` &lt;int&gt;, `Gregory Goyle` &lt;int&gt;, `Fleur
+## #   Delacour` &lt;int&gt;, `Vincent Crabbe` &lt;int&gt;, `Filius Flitwick` &lt;int&gt;, `Charlie
+## #   Weasley` &lt;int&gt;, `Petunia Dursley` &lt;int&gt;, `Nymphadora Tonks` &lt;int&gt;, `Vernon
+## #   Dursley` &lt;int&gt;, `Seamus Finnigan` &lt;int&gt;, Hedwig &lt;int&gt;, `Dean Thomas` &lt;int&gt;,
+## #   `Gilderoy Lockhart` &lt;int&gt;, `Cornelius Fudge` &lt;int&gt;, `Quirinus
+## #   Quirrell` &lt;int&gt;, `Sybill Trelawney` &lt;int&gt;, `Nearly Headless Nick` &lt;int&gt;,
+## #   `Narcissa Malfoy` &lt;int&gt;, `Barty Crouch Sr` &lt;int&gt;, `Oliver Wood` &lt;int&gt;,
+## #   `Parvati Patil` &lt;int&gt;, `Horace Slughorn` &lt;int&gt;, `Argus Filch` &lt;int&gt;,
+## #   `Godric Gryffindor` &lt;int&gt;, `Lavender Brown` &lt;int&gt;, `Pomona Sprout` &lt;int&gt;,
+## #   `Salazar Slytherin` &lt;int&gt;, `Kingsley Shacklebolt` &lt;int&gt;, `Garrick
+## #   Ollivander` &lt;int&gt;, Peeves &lt;int&gt;, Crookshanks &lt;int&gt;, `Moaning Myrtle` &lt;int&gt;,
+## #   Kreacher &lt;int&gt;, `Rita Skeeter` &lt;int&gt;, `Angelina Johnson` &lt;int&gt;, `Colin
+## #   Creevey` &lt;int&gt;, `Xenophilius Lovegood` &lt;int&gt;, `Poppy Pomfrey` &lt;int&gt;, `Pansy
+## #   Parkinson` &lt;int&gt;, `Aberforth Dumbledore` &lt;int&gt;, `Igor Karkaroff` &lt;int&gt;,
+## #   Buckbeak &lt;int&gt;, `Lee Jordan` &lt;int&gt;, `Rufus Scrimgeour` &lt;int&gt;, `Olympe
+## #   Maxime` &lt;int&gt;, Winky &lt;int&gt;, `Fenrir Greyback` &lt;int&gt;, `Mundungus
+## #   Fletcher` &lt;int&gt;, Fang &lt;int&gt;, `Gellert Grindelwald` &lt;int&gt;, `Bathilda
+## #   Bagshot` &lt;int&gt;, Firenze &lt;int&gt;, `Marge Dursley` &lt;int&gt;, `Ludo Bagman` &lt;int&gt;,
+## #   `Amos Diggory` &lt;int&gt;, Griphook &lt;int&gt;, `The Fat Lady` &lt;int&gt;, `Frank
+## #   Bryce` &lt;int&gt;, `Ernie MacMillan` &lt;int&gt;, `Cormac McLaggen` &lt;int&gt;, `Stan
+## #   Shunpike` &lt;int&gt;, Grawp &lt;int&gt;, `Marvolo Gaunt` &lt;int&gt;, Fawkes &lt;int&gt;, `Elphias
+## #   Doge` &lt;int&gt;, `Phineas Nigellus Black` &lt;int&gt;, `Bob Ogden` &lt;int&gt;, `Morfin
+## #   Gaunt` &lt;int&gt;</code></pre>
+<pre class="r"><code>ncol(wide)</code></pre>
+<pre><code>## [1] 100</code></pre>
+<pre class="r"><code>long &lt;- wide %&gt;% pivot_longer(1:100, names_to = &quot;Character&quot;, 
+    values_to = &quot;Instances_of_Aggression&quot;)
+head(long)</code></pre>
+<pre><code>## # A tibble: 6 x 2
+##   Character        Instances_of_Aggression
+##   &lt;chr&gt;                              &lt;int&gt;
+## 1 Harry Potter                         160
+## 2 Ron Weasley                           35
+## 3 Hermione Granger                      67
+## 4 Albus Dumbledore                      24
+## 5 Severus Snape                         28
+## 6 Voldemort                             61</code></pre>
+<p>Book_Mentions had 100 observations, Aggression had 105 observations, Film_Lines had 50 observations, and HP_House had 142 observations. I decided to use left_join to join all the datasets to Book_Mentions so that they would match the 100 most frequently mentioned characters in the books. I did this to base my project off of the original work. In addition, the Aggression dataset contained several unnamed characters who had some sort of aggressive action, and I did not want these very minor, one-time characters to clutter my data. HP_House also had 42 extra characters who were removed so that the 100 most mentioned characters were all I looked at. The only potential problem with removing these characters is just that minor characters or characters only present for a short amount of time in the books will be excluded. Any characters that may have been added to the movies will not be present. After viewing the Aggression dataset, I saw that several of the main characters, like Harry Potter and Hermione Granger, had a higher number of aggressive actions than the antagonists of the series, such as Voldemort. Since a higher number of mentions could cause the instances of aggression to also be high, this could make these characters seem more aggressive than they actually are.</p>
+<pre class="r"><code># Summary statistics Making sure numeric variables
+# are numeric
+final_joined$Instances_of_Aggression &lt;- as.numeric(final_joined$Instances_of_Aggression)
+final_joined$Mentions &lt;- as.numeric(final_joined$Mentions, 
+    na.rm = T)
+final_joined$Number_of_Lines &lt;- as.numeric(final_joined$Number_of_Lines)
+sapply(final_joined, class)</code></pre>
+<pre><code>##               Character                Mentions                   House 
+##                &quot;factor&quot;               &quot;numeric&quot;                &quot;factor&quot; 
+##         Number_of_Lines Instances_of_Aggression 
+##               &quot;numeric&quot;               &quot;numeric&quot;</code></pre>
+<pre class="r"><code># Making a new column for proportion of aggression
+# actions divided by number of mentions in the book
+# to find proportion of time a character is going
+# to be aggressive if mentioned. That way,
+# characters like Harry Potter don&#39;t appear more
+# aggressive than characters like Voldemort just
+# because they are mentioned more.
+prop_agg &lt;- final_joined %&gt;% mutate(Percent_Aggression = Instances_of_Aggression/Mentions * 
+    100)
+prop_agg %&gt;% arrange(desc(Percent_Aggression))</code></pre>
+<pre><code>##               Character Mentions      House Number_of_Lines
+## 1   Bellatrix Lestrange      220  Slytherin              45
+## 2  Aberforth Dumbledore       79  Ravenclaw              NA
+## 3                Fawkes       64       &lt;NA&gt;              NA
+## 4     Quirinus Quirrell      122  Ravenclaw              NA
+## 5          Amos Diggory       76 Hufflepuff              NA
+## 6  Kingsley Shacklebolt      106 Gryffindor              NA
+## 7             Voldemort     1797  Slytherin             134
+## 8       Filius Flitwick      140  Ravenclaw              NA
+## 9        Vincent Crabbe      224  Slytherin              NA
+## 10     Dolores Umbridge      637  Slytherin              65
+## 11         James Potter      190 Gryffindor               6
+## 12   Neville Longbottom      810 Gryffindor              88
+## 13        Parvati Patil      133 Gryffindor              NA
+## 14      Narcissa Malfoy       89  Slytherin               6
+## 15         Draco Malfoy     1198  Slytherin              96
+## 16        Luna Lovegood      356  Ravenclaw              56
+##    Instances_of_Aggression Percent_Aggression
+## 1                       29          13.181818
+## 2                        4           5.063291
+## 3                        3           4.687500
+## 4                        5           4.098361
+## 5                        3           3.947368
+## 6                        4           3.773585
+## 7                       61           3.394546
+## 8                        4           2.857143
+## 9                        6           2.678571
+## 10                      17           2.668760
+## 11                       5           2.631579
+## 12                      21           2.592593
+## 13                       3           2.255639
+## 14                       2           2.247191
+## 15                      21           1.752922
+## 16                       6           1.685393
+##  [ reached &#39;max&#39; / getOption(&quot;max.print&quot;) -- omitted 84 rows ]</code></pre>
+<pre class="r"><code>head(prop_agg)</code></pre>
+<pre><code>##          Character Mentions      House Number_of_Lines Instances_of_Aggression
+## 1     Harry Potter    18956 Gryffindor            1540                     160
+## 2      Ron Weasley     6464 Gryffindor             728                      35
+## 3 Hermione Granger     5486 Gryffindor             682                      67
+## 4 Albus Dumbledore     2421 Gryffindor             324                      24
+## 5    Severus Snape     1956  Slytherin             131                      28
+## 6        Voldemort     1797  Slytherin             134                      61
+##   Percent_Aggression
+## 1          0.8440599
+## 2          0.5414604
+## 3          1.2212906
+## 4          0.9913259
+## 5          1.4314928
+## 6          3.3945465</code></pre>
+<pre class="r"><code># Number of times a character from each house is
+# mentioned
+Mentions_by_house &lt;- prop_agg %&gt;% group_by(House) %&gt;% 
+    summarize(Mean_Number_of_Mentions = mean(Mentions))
+head(Mentions_by_house)</code></pre>
+<pre><code>## # A tibble: 6 x 2
+##   House                Mean_Number_of_Mentions
+##   &lt;fct&gt;                                  &lt;dbl&gt;
+## 1 Durmstrang Institute                    221 
+## 2 Gryffindor                             1461.
+## 3 Hufflepuff                              163.
+## 4 Ravenclaw                               176.
+## 5 Slytherin                               563.
+## 6 &lt;NA&gt;                                    183.</code></pre>
+<pre class="r"><code># Mean number of aggressive actions done by
+# characters summarized by their house
+Aggression_by_House &lt;- prop_agg %&gt;% select(House, Instances_of_Aggression) %&gt;% 
+    group_by(House) %&gt;% summarize(mean(Instances_of_Aggression, 
+    na.rm = T))
+head(Aggression_by_House)</code></pre>
+<pre><code>## # A tibble: 6 x 2
+##   House                `mean(Instances_of_Aggression, na.rm = T)`
+##   &lt;fct&gt;                                                     &lt;dbl&gt;
+## 1 Durmstrang Institute                                       2   
+## 2 Gryffindor                                                17.4 
+## 3 Hufflepuff                                                 3.33
+## 4 Ravenclaw                                                  4   
+## 5 Slytherin                                                 18.7 
+## 6 &lt;NA&gt;                                                       2.2</code></pre>
+<pre class="r"><code># What percent of the time should we expect an
+# aggressive action by a character depending on
+# which house they are in
+Prop_aggression_by_house &lt;- prop_agg %&gt;% group_by(House) %&gt;% 
+    summarize(Percent_Aggression = mean(Percent_Aggression, 
+        na.rm = T))
+head(Prop_aggression_by_house)</code></pre>
+<pre><code>## # A tibble: 6 x 2
+##   House                Percent_Aggression
+##   &lt;fct&gt;                             &lt;dbl&gt;
+## 1 Durmstrang Institute              0.722
+## 2 Gryffindor                        1.21 
+## 3 Hufflepuff                        2.15 
+## 4 Ravenclaw                         2.63 
+## 5 Slytherin                         3.19 
+## 6 &lt;NA&gt;                              1.42</code></pre>
+<pre class="r"><code># I wanted to know more information specifically
+# about the Weasley Family
+prop_agg %&gt;% filter(str_detect(Character, &quot;Weasley&quot;)) %&gt;% 
+    filter(str_detect(House, &quot;Gryffindor&quot;))</code></pre>
+<pre><code>##         Character Mentions      House Number_of_Lines Instances_of_Aggression
+## 1     Ron Weasley     6464 Gryffindor             728                      35
+## 2    Fred Weasley      920 Gryffindor             111                       6
+## 3  George Weasley      821 Gryffindor             108                       6
+## 4   Ginny Weasley      771 Gryffindor              56                       7
+## 5   Molly Weasley      722 Gryffindor              68                      11
+## 6   Percy Weasley      426 Gryffindor               4                       2
+## 7  Arthur Weasley      780 Gryffindor              75                       4
+## 8 Charlie Weasley      110 Gryffindor              NA                      NA
+##   Percent_Aggression
+## 1          0.5414604
+## 2          0.6521739
+## 3          0.7308161
+## 4          0.9079118
+## 5          1.5235457
+## 6          0.4694836
+## 7          0.5128205
+## 8                 NA</code></pre>
+<pre class="r"><code>Weasley_Totals &lt;- prop_agg %&gt;% filter(str_detect(Character, 
+    &quot;Weasley&quot;)) %&gt;% filter(str_detect(House, &quot;Gryffindor&quot;)) %&gt;% 
+    summarize(`Mean Mentions` = mean(Mentions), `Mean Percent Aggression` = mean(Percent_Aggression, 
+        na.rm = T), `Mean Lines` = mean(Number_of_Lines, 
+        na.rm = T), `Mean Instances of Aggression` = mean(Instances_of_Aggression, 
+        na.rm = T))
+Weasley_Totals</code></pre>
+<pre><code>##   Mean Mentions Mean Percent Aggression Mean Lines Mean Instances of Aggression
+## 1       1376.75               0.7626017   164.2857                     10.14286</code></pre>
+<pre class="r"><code># Now I want to find the mean statistics for each
+# of the Houses
+Means_byHouse_na &lt;- prop_agg %&gt;% group_by(House) %&gt;% 
+    summarize(`Mean Mentions` = mean(Mentions, na.rm = T), 
+        `Mean Lines` = mean(Number_of_Lines, na.rm = T), 
+        `Mean Aggression Instances` = mean(Instances_of_Aggression, 
+            na.rm = T), `Mean Percent Aggression` = mean(Percent_Aggression, 
+            na.rm = T))
+Means_byHouse &lt;- na.omit(Means_byHouse_na)
+head(Means_byHouse)</code></pre>
+<pre><code>## # A tibble: 5 x 5
+##   House      `Mean Mentions` `Mean Lines` `Mean Aggression I… `Mean Percent Agg…
+##   &lt;fct&gt;                &lt;dbl&gt;        &lt;dbl&gt;               &lt;dbl&gt;              &lt;dbl&gt;
+## 1 Durmstran…            221           4                  2                 0.722
+## 2 Gryffindor           1461.        199.                17.4               1.21 
+## 3 Hufflepuff            163.         18.5                3.33              2.15 
+## 4 Ravenclaw             176.         33                  4                 2.63 
+## 5 Slytherin             563.         78.5               18.7               3.19</code></pre>
+<pre class="r"><code># Next, I wanted to see the standard deviations for
+# each house
+sd_byHouse_na &lt;- prop_agg %&gt;% group_by(House) %&gt;% summarize(`SD Mentions` = sd(Mentions, 
+    na.rm = T), `SD Lines` = sd(Number_of_Lines, na.rm = T), 
+    `SD Aggression Instances` = sd(Instances_of_Aggression, 
+        na.rm = T), `SD Percent Aggression` = sd(Percent_Aggression, 
+        na.rm = T))
+sd_byHouse &lt;- na.omit(sd_byHouse_na)
+head(sd_byHouse)</code></pre>
+<pre><code>## # A tibble: 4 x 5
+##   House     `SD Mentions` `SD Lines` `SD Aggression Instan… `SD Percent Aggress…
+##   &lt;fct&gt;             &lt;dbl&gt;      &lt;dbl&gt;                  &lt;dbl&gt;                &lt;dbl&gt;
+## 1 Gryffind…        3507.       360.                  34.4                  0.868
+## 2 Hufflepu…         114.        10.6                  0.577                1.61 
+## 3 Ravenclaw          93.9       21.9                  1.41                 1.68 
+## 4 Slytherin         659.        45.5                 19.3                  3.86</code></pre>
+<pre class="r"><code># Then I joined the data on mean and standard
+# deviation to make one table
+Stats_by_House &lt;- merge(Means_byHouse, sd_byHouse)
+Stats_by_House</code></pre>
+<pre><code>##        House Mean Mentions Mean Lines Mean Aggression Instances
+## 1 Gryffindor     1461.0625   198.7273                 17.391304
+## 2 Hufflepuff      163.1667    18.5000                  3.333333
+## 3  Ravenclaw      176.2500    33.0000                  4.000000
+## 4  Slytherin      562.6923    78.5000                 18.666667
+##   Mean Percent Aggression SD Mentions  SD Lines SD Aggression Instances
+## 1                1.212315   3507.1833 359.69460              34.3983868
+## 2                2.150040    114.4455  10.60660               0.5773503
+## 3                2.629910     93.8597  21.86321               1.4142136
+## 4                3.192224    659.4355  45.45327              19.3326149
+##   SD Percent Aggression
+## 1             0.8683106
+## 2             1.6074852
+## 3             1.6801896
+## 4             3.8565600</code></pre>
+<pre class="r"><code># I was also curious which character had the most
+# instances of aggression and which character had
+# the highest proportion of aggressive actions
+# based on how often the character was mentioned
+# (percent aggression) Max aggression instances &amp;
+# proportion
+prop_agg %&gt;% select(Character, Instances_of_Aggression) %&gt;% 
+    slice(which.max(Instances_of_Aggression))  #Harry Potter was aggressive most number of times</code></pre>
+<pre><code>##      Character Instances_of_Aggression
+## 1 Harry Potter                     160</code></pre>
+<pre class="r"><code>prop_agg %&gt;% select(Character, Percent_Aggression) %&gt;% 
+    slice(which.max(Percent_Aggression))  #Bellatrix had highest percent chance of being aggressive when mentioned</code></pre>
+<pre><code>##             Character Percent_Aggression
+## 1 Bellatrix Lestrange           13.18182</code></pre>
+<pre class="r"><code># Then I wanted to find the opposite Min aggression
+# instances &amp; proportion
+prop_agg %&gt;% select(Character, Percent_Aggression) %&gt;% 
+    slice(which.min(Percent_Aggression))  #Hagrid</code></pre>
+<pre><code>##       Character Percent_Aggression
+## 1 Rubeus Hagrid          0.1482213</code></pre>
+<pre class="r"><code># Correlation matrix for numerical data
+nums &lt;- prop_agg %&gt;% rename(Lines = Number_of_Lines, 
+    Aggression = Instances_of_Aggression, Perc_Aggres = Percent_Aggression)
+proj_nums &lt;- nums %&gt;% column_to_rownames(&quot;Character&quot;) %&gt;% 
+    select_if(is.numeric, na.rm = T) %&gt;% cor(use = &quot;pair&quot;)</code></pre>
+<p>First, I made a new variable called Percent_Aggression, which was calculated by dividing the instances of aggression by the number of mentions and multiplying by 100. The result is a new column that gives the percent chance any given character will show aggressiveness if mentioned. Now, characters do not appear to be more aggressive just because the story is focused around them. Next, I grouped all the characters by house to find the mean percent of the time we would expect a character from each house to show aggressiveness. Characters who were not specified as being in a house or who did not attend Hogwarts did not have a house, and characters from the Durmstrang school were grouped together. Students from Slytherin had the highest percent chance of showing aggression when mentioned with 3.19%, while Durmstrang students showed the least likeliness of being aggressive with 0.72%. Next, I was interested in studying the members of the Weasley family who were also in the Gryffindor house and made a table showing the mean number of lines, number of mentions, number of instances of aggression, and the mean percent aggression for this subset of characters. Then, I made a table of the means and standard deviations of each numeric variable grouped by house. Anyone not in one of the four main houses was placed in one group since these tended to be minor characters. Gryffindors and Slytherins tended to be the highest means across the variables, and Gryffindor tended to have the highest standard deviation, most likely because Gryffindors outside the main characters had much lower stats. Harry Potter had the highest number of aggressive actions with 160 instances, but Bellatrix Lestrange had the highest percent chance of showing aggressiveness with 13.2%. Many characters had only 1 aggressive incident, so I did not calculate that statistic. Hagrid had the lowest percent chance of showing aggression with 0.148%. Lastly, I found the correlations between all numeric variables to help determine their relationships to each other.</p>
+<pre class="r"><code># Visualizing Data
+
+# Correlation Heatmap
+proj_matrix &lt;- proj_nums %&gt;% as.data.frame %&gt;% rownames_to_column(&quot;Variable 1&quot;) %&gt;% 
+    pivot_longer(-1, names_to = &quot;Variable 2&quot;, values_to = &quot;correlation&quot;)
+proj_matrix %&gt;% ggplot(aes(`Variable 1`, `Variable 2`, 
+    fill = correlation)) + geom_tile() + scale_fill_gradient2(low = &quot;yellow&quot;, 
+    mid = &quot;red&quot;, high = &quot;dark red&quot;) + ggtitle(&quot;Correlations of Numerical Variables&quot;)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># High cor between mentions, incidents of
+# aggression and lines but interestingly not
+# between percent aggression and instances of
+# aggression
+
+# Graph 1 I adjusted the x and y limits to exclude
+# some of the outliers, who were all Gryffindor, so
+# that the rest of the data could be seen. Even
+# still, Gryffindors and Slytherins had far more
+# mentions and lines.
+library(ggplot2)
+plot1 &lt;- as.data.frame(prop_agg)
+ggplot(data = plot1, aes(x = Mentions, y = Number_of_Lines, 
+    color = House)) + ggtitle(&quot;Number of Mentions in Books vs Number of Lines in Films by House in Harry Potter&quot;) + 
+    geom_smooth(method = &quot;lm&quot;, aes(group = House, color = House), 
+        stat = &quot;summary&quot;) + geom_point(aes(group = House)) + 
+    xlim(1, 2500) + ylim(1, 500) + theme_light()</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># Graph 2- figure out how to manually change
+# colors???
+plot2 &lt;- prop_agg %&gt;% na.omit(Percent_Aggression)
+ggplot(data = plot2, aes(x = Character, y = Percent_Aggression, 
+    fill = House)) + geom_bar(stat = &quot;summary&quot;) + theme_light() + 
+    scale_y_continuous(breaks = seq(0, 15, by = 0.75)) + 
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+    ggtitle(&quot;Percent Chance of Showing Aggression by Character and House&quot;)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-4-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># I removed any characters who did not show any
+# aggressiveness</code></pre>
+<p>The correlation heatmap showed the various correlations between the four numerical variables: the number of times a character was mentioned in the books, the number of lines each character had in the films, the number of aggressive instances each character showed in the books, and the percent chance a character would show aggression if mentioned. There was a high correlation (between 0.75 and 1.0) between the number of aggressive instances, the number of times a character was mentioned in the books, and the number of lines a character had in the films. This makes sense because characters who were important to the books would be mentioned a lot and also have a prominent role in the films. In addition, the more prominent a character is, the more times we would see them showing aggression. However, the percent aggression variable had a correlation between 0.0 and 0.25 with each of the variables. There was a slightly higher correlation between percent aggression and aggressive instances than between percent aggression and the other two numerical variables, showing that the main characters were likely not the most aggressive characters. The line graph showed the relationship between the number of times a character was mentioned in the books and the number lines a character had in the movies broken down by House. Characters noted as having NA for their house are any characters who attended Hogwarts but whose house was unknown or who did not have magic. In addition, there were several Gryffindor data points that skewed the graph so much that is caused the rest of the data to not be seen. As a result, I adjusted the x and y limits of the graph to allow for visualization of the rest of the data. Even so, Gryffindor characters were both mentioned more and had more lines in the films, with Slytherin as the second highest in both, and the rest of the characters were present much less. When this data is grouped by house, there is still a positive correlation between the two variables, although there may be more variance. The bar graph shows individual characters and their percent chance of exhibiting aggressiveness if mentioned. The bars are also colored by house. I excluded characters who showed 0 instances of aggression, who as a result had 0% chance of exhibiting aggression, to allow the more aggressive characters to be seen more clearly. While the two largest percentages were for Slytherin characters, the house with the highest number of aggressive characters was Gryffindor. There was only one Durmstrang student on the graph, but there were not many Durmstrang students present throughout the books. There were also only two Hufflepuff and three Ravenclaw students shown on the graph.</p>
+<pre class="r"><code># PCA
+
+# Preparing the data
+prop_agg %&gt;% select(-c(Character, House)) %&gt;% cor(use = &quot;pair&quot;)</code></pre>
+<pre><code>##                           Mentions Number_of_Lines Instances_of_Aggression
+## Mentions                 1.0000000       0.9813041              0.93153789
+## Number_of_Lines          0.9813041       1.0000000              0.90723237
+## Instances_of_Aggression  0.9315379       0.9072324              1.00000000
+## Percent_Aggression      -0.1383549      -0.1153508              0.06367623
+##                         Percent_Aggression
+## Mentions                       -0.13835487
+## Number_of_Lines                -0.11535076
+## Instances_of_Aggression         0.06367623
+## Percent_Aggression              1.00000000</code></pre>
+<pre class="r"><code># Computing PC scores
+mypca &lt;- prop_agg %&gt;% select(-c(Character, House)) %&gt;% 
+    na.omit() %&gt;% scale() %&gt;% prcomp()
+mypca</code></pre>
+<pre><code>## Standard deviations (1, .., p=4):
+## [1] 1.6971690 1.0162818 0.2652463 0.1281914
+## 
+## Rotation (n x k) = (4 x 4):
+##                                 PC1         PC2        PC3         PC4
+## Mentions                -0.58432122  0.05334951 -0.2291761 -0.77666006
+## Number_of_Lines         -0.58026117  0.05595228 -0.5461574  0.60156329
+## Instances_of_Aggression -0.56597740 -0.18032733  0.7835484  0.18221825
+## Percent_Aggression       0.03918257 -0.98056373 -0.1877291 -0.04143997</code></pre>
+<pre class="r"><code># Choosing number of PCs to keep Picking until
+# cumulative proportion of variance is greater than
+# 80%
+summary(mypca)</code></pre>
+<pre><code>## Importance of components:
+##                           PC1    PC2     PC3     PC4
+## Standard deviation     1.6972 1.0163 0.26525 0.12819
+## Proportion of Variance 0.7201 0.2582 0.01759 0.00411
+## Cumulative Proportion  0.7201 0.9783 0.99589 1.00000</code></pre>
+<pre class="r"><code># Giving correlation matrix to eigen
+pca2 &lt;- prop_agg %&gt;% select(-c(Character, House)) %&gt;% 
+    cor(use = &quot;pair&quot;) %&gt;% eigen()
+pca2</code></pre>
+<pre><code>## eigen() decomposition
+## $values
+## [1] 2.88699557 1.01947096 0.07954341 0.01399006
+## 
+## $vectors
+##             [,1]        [,2]       [,3]        [,4]
+## [1,] -0.58452220  0.04142817  0.2020199  0.78473274
+## [2,] -0.57925922  0.02291668  0.5722939 -0.58001149
+## [3,] -0.56505575 -0.16948052 -0.7793154 -0.21131927
+## [4,]  0.05919933 -0.98439570  0.1559974  0.05590496</code></pre>
+<pre class="r"><code># Plotting scores to show data with respect to PC1
+# and PC2
+mypca$x %&gt;% as.data.frame %&gt;% ggplot(aes(PC1, PC2)) + 
+    geom_point()</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># Plot of which variables contribute to which PCs
+mypca$rotation[, 1:2] %&gt;% as.data.frame %&gt;% rownames_to_column %&gt;% 
+    ggplot() + geom_hline(aes(yintercept = 0), lty = 2) + 
+    geom_vline(aes(xintercept = 0), lty = 2) + ylab(&quot;PC2&quot;) + 
+    xlab(&quot;PC1&quot;) + geom_segment(aes(x = 0, y = 0, xend = PC1, 
+    yend = PC2), arrow = arrow(), col = &quot;red&quot;) + geom_label(aes(x = PC1 * 
+    1.1, y = PC2 * 1.1, label = rowname)) + ggtitle(&quot;Contributions of PC1 and PC2&quot;)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># Mentions seems to be hidden behind number of
+# lines. They are very similar to each other</code></pre>
+<p>All relevant steps discussed in class. Visualization of clusters or the first few PCs using ggplot, supporting paragraph or two explaining the results found.</p>
+<p>To perform PCA, the data is first prepared by selecting all the numeric variables. 72.01% of the variance is accounted for by PC1, and 97.83% of the variance is accounted for by both PC1 and PC2. Since the cumulative proportion of variance is greater than 80% at PC2, the necessary number of PCs to select is two. The scatterplot shows the data with respect to PC1 and PC2 and shows a few outliers. The plot showing the contributions of PC1 and PC2 show that PC1 mostly explains the the percent chance a character will show aggression while mentioned, while PC2 mostly explains the instances of aggression of a character as written in the books, the number of times a character was mentioned in the books, and the number of lines a character had in the films.The arrow for Mentions seems to be behind the one for Number of Lines because they are very closely correlated.</p>
+<p>Note that the <code>echo = FALSE</code> parameter was added to the code chunk to prevent printing of the R code that generated the plot.</p>
+</div>
+
+            
+        <hr>         <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div> 
+            </div>
+          </div>
+
+   <hr>  <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div> 
+        </div>
+      </div>
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="../../js/docs.min.js"></script>
+<script src="../../js/main.js"></script>
+
+<script src="../../js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>

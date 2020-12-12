@@ -1,0 +1,202 @@
+---
+title: "Project 1"
+output: html_document
+date: "2020-12-05"
+---
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", warning = F, message = F, tidy=T, tidy.opts=list(width.cutoff=50), R.options=list(max.print=100,dplyr.print_max=100))
+```
+
+
+```{r, cache=TRUE}
+#Loading Data
+Agression <- read.csv("Agression.csv", header=FALSE)
+
+HPHouse <- read.csv("HPHouse.csv", header=FALSE, na.strings=c("","NA"))
+
+SDS348_Project1 <- read.csv("SDS348_Project1.csv", header=FALSE)
+Book_Mentions <- SDS348_Project1
+
+Film_Lines <- read.csv("Film_Lines.csv", header=FALSE)
+
+``` 
+
+Introduction:
+
+  For my project, I chose to find datasets from the Harry Potter books and films. I was inspired after seeing a tweet about how the actor for Draco Malfoy was only present for less than 20 minutes of all eight movies. The Book_Mentions dataset contains a list of 100 characters and the number of times they were mentioned in all seven books. The Film_Lines dataset contains 50 characters and the number of lines they have in the films. The HP_House dataset had a list of 141 characters and the Hogwarts house they were placed in. There was a good amount of characters who did not have a house, whether because it was never stated in the books or because they did not attend Hogwarts. The last dataset was Instances_of_Aggression, which had a list of 104 characters who had at least one moment where they showed aggression and the number of times they exhibited an aggressive behavior.
+  All the datasets were found online and compiled into spreadsheets by fans of the franchise. I then selected the specific datasets I was interested in determining the relationships for to use in my project. As a fan of Harry Potter myself, I was interested in the relationships I would find between each character's house, number of mentions in the books, number of lines in the films, and number of times they showed aggressiveness in the books. I expected to find a positive correlation between number of mentions in the book and number of lines in the films because the more important a character is to the plot of the books, the more likely they would be important to the plot of the movies. I also expected to find that characters who were in the Slytherin house would have a greater number of instances of aggression since Slytherin characters were more known for having aggressive traits.
+  
+```{r}
+#Making data tidy
+library(tidyverse)
+
+Book_Mentions <- Book_Mentions[-c(1), ] #needed to remove an empty first row
+Book_Mentions <- Book_Mentions %>% rename(Character = V1, Mentions=V2)
+nrow(Book_Mentions)
+
+Aggression <- Agression[-c(1), ]
+Aggression <- Agression %>% rename(Character = V1, Instances_of_Aggression=V2)
+nrow(Aggression)
+
+Film_Lines <- Film_Lines[-c(3,4,5)]
+Film_Lines <- Film_Lines[-c(51:86),]
+Film_Lines <- Film_Lines %>% rename(Number_of_Lines = V1, Character=V2)
+nrow(Film_Lines)
+
+HPHouse <- HPHouse %>% rename(Character = V1, House=V2)
+HP_House <- HPHouse[-c(143:507),]
+nrow(HP_House)
+
+#Joining the data, using left_join so that everything is joined by book mentions
+pt1 <- left_join(Book_Mentions, HP_House, by="Character")
+nrow(pt1)
+pt2 <- left_join(pt1, Film_Lines, by="Character")
+nrow(pt2)
+joined <- left_join(pt2, Aggression, by="Character") %>% glimpse()
+head(joined)
+
+#There were 103 rows but Book_Mentions dataset only had 100 distinct characters
+final_joined <- unique(joined)
+final_joined$Mentions <- gsub(",","", final_joined$Mentions) 
+head(final_joined)
+
+#Showing use of pivot_wider and pivot_longer
+wide <- final_joined %>% pivot_wider(1, names_from="Character", values_from="Instances_of_Aggression") %>% arrange()
+head(wide)
+ncol(wide)
+long <- wide %>% pivot_longer(1:100, names_to="Character", values_to="Instances_of_Aggression")
+head(long)    
+
+```
+  Book_Mentions had 100 observations, Aggression had 105 observations, Film_Lines had 50 observations, and HP_House had 142 observations. I decided to use left_join to join all the datasets to Book_Mentions so that they would match the 100 most frequently mentioned characters in the books. I did this to base my project off of the original work. In addition, the Aggression dataset contained several unnamed characters who had some sort of aggressive action, and I did not want these very minor, one-time characters to clutter my data. HP_House also had 42 extra characters who were removed so that the 100 most mentioned characters were all I looked at. The only potential problem with removing these characters is just that minor characters or characters only present for a short amount of time in the books will be excluded. Any characters that may have been added to the movies will not be present. After viewing the Aggression dataset, I saw that several of the main characters, like Harry Potter and Hermione Granger, had a higher number of aggressive actions than the antagonists of the series, such as Voldemort. Since a higher number of mentions could cause the instances of aggression to also be high, this could make these characters seem more aggressive than they actually are.
+
+
+```{r}
+#Summary statistics
+#Making sure numeric variables are numeric
+final_joined$Instances_of_Aggression <- as.numeric(final_joined$Instances_of_Aggression)
+final_joined$Mentions <- as.numeric(final_joined$Mentions, na.rm=T)
+final_joined$Number_of_Lines <- as.numeric(final_joined$Number_of_Lines)
+sapply(final_joined, class)
+
+#Making a new column for proportion of aggression actions divided by number of mentions in the book to find proportion of time a character is going to be aggressive if mentioned. That way, characters like Harry Potter don't appear more aggressive than characters like Voldemort just because they are mentioned more.
+prop_agg <- final_joined %>% mutate(Percent_Aggression=Instances_of_Aggression/Mentions *100)
+prop_agg %>% arrange(desc(Percent_Aggression)) 
+head(prop_agg)
+
+#Number of times a character from each house is mentioned
+Mentions_by_house <- prop_agg %>% group_by(House) %>% summarize(Mean_Number_of_Mentions =mean(Mentions))
+head(Mentions_by_house)
+
+#Mean number of aggressive actions done by characters summarized by their house
+Aggression_by_House <- prop_agg %>% select(House, Instances_of_Aggression) %>% group_by(House) %>% summarize(mean(Instances_of_Aggression, na.rm=T))
+head(Aggression_by_House)
+
+#What percent of the time should we expect an aggressive action by a character depending on which house they are in
+Prop_aggression_by_house <- prop_agg %>% group_by(House) %>% summarize(Percent_Aggression=mean(Percent_Aggression, na.rm=T))
+head(Prop_aggression_by_house)
+
+#I wanted to know more information specifically about the Weasley Family
+prop_agg %>% filter(str_detect(Character, "Weasley")) %>% filter(str_detect(House, "Gryffindor"))
+
+Weasley_Totals <- prop_agg %>% filter(str_detect(Character, "Weasley")) %>% filter(str_detect(House, "Gryffindor")) %>% summarize("Mean Mentions"=mean(Mentions), "Mean Percent Aggression"=mean(Percent_Aggression, na.rm=T), "Mean Lines"=mean(Number_of_Lines, na.rm=T), "Mean Instances of Aggression"=mean(Instances_of_Aggression, na.rm=T))
+Weasley_Totals
+
+#Now I want to find the mean statistics for each of the Houses
+Means_byHouse_na <- prop_agg %>% group_by(House) %>% summarize("Mean Mentions"=mean(Mentions, na.rm=T), "Mean Lines"=mean(Number_of_Lines, na.rm=T), "Mean Aggression Instances"=mean(Instances_of_Aggression, na.rm=T), "Mean Percent Aggression"=mean(Percent_Aggression, na.rm=T))
+ Means_byHouse <- na.omit(Means_byHouse_na)
+  head(Means_byHouse)
+  
+#Next, I wanted to see the standard deviations for each house
+sd_byHouse_na <- prop_agg %>% group_by(House) %>% summarize("SD Mentions"=sd(Mentions, na.rm=T), "SD Lines"= sd(Number_of_Lines, na.rm=T), "SD Aggression Instances"=sd(Instances_of_Aggression, na.rm=T), "SD Percent Aggression"=sd(Percent_Aggression, na.rm=T))
+ sd_byHouse <- na.omit(sd_byHouse_na)
+  head(sd_byHouse)
+
+#Then I joined the data on mean and standard deviation to make one table
+Stats_by_House <- merge(Means_byHouse,sd_byHouse)
+Stats_by_House
+
+#I was also curious which character had the most instances of aggression and which character had the highest proportion of aggressive actions based on how often the character was mentioned (percent aggression)
+#Max aggression instances & proportion
+prop_agg %>% select(Character, Instances_of_Aggression) %>% slice(which.max(Instances_of_Aggression)) #Harry Potter was aggressive most number of times
+prop_agg %>% select(Character, Percent_Aggression) %>% slice(which.max(Percent_Aggression)) #Bellatrix had highest percent chance of being aggressive when mentioned
+
+#Then I wanted to find the opposite
+# Min aggression instances & proportion
+prop_agg %>% select(Character, Percent_Aggression) %>% slice(which.min(Percent_Aggression)) #Hagrid
+  
+#Correlation matrix for numerical data
+nums <- prop_agg %>% rename(Lines= Number_of_Lines, Aggression=Instances_of_Aggression, Perc_Aggres=Percent_Aggression) 
+proj_nums <- nums %>% column_to_rownames("Character") %>% select_if(is.numeric, na.rm=T) %>% cor(use="pair")
+
+```
+  First, I made a new variable called Percent_Aggression, which was calculated by dividing the instances of aggression by the number of mentions and multiplying by 100. The result is a new column that gives the percent chance any given character will show aggressiveness if mentioned. Now, characters do not appear to be more aggressive just because the story is focused around them. Next, I grouped all the characters by house to find the mean percent of the time we would expect a character from each house to show aggressiveness. Characters who were not specified as being in a house or who did not attend Hogwarts did not have a house, and characters from the Durmstrang school were grouped together. Students from Slytherin had the highest percent chance of showing aggression when mentioned with 3.19%, while Durmstrang students showed the least likeliness of being aggressive with 0.72%. 
+  Next, I was interested in studying the members of the Weasley family who were also in the  Gryffindor house and made a table showing the mean number of lines, number of mentions, number of instances of aggression, and the mean percent aggression for this subset of characters. Then, I made a table of the means and standard deviations of each numeric variable grouped by house. Anyone not in one of the four main houses was placed in one group since these tended to be minor characters. Gryffindors and Slytherins tended to be the highest means across the variables, and Gryffindor tended to have the highest standard deviation, most likely because Gryffindors outside the main characters had much lower stats. Harry Potter had the highest number of aggressive actions with 160 instances, but Bellatrix Lestrange had the highest percent chance of showing aggressiveness with 13.2%. Many characters had only 1 aggressive incident, so I did not calculate that statistic. Hagrid had the lowest percent chance of showing aggression with 0.148%. Lastly, I found the correlations between all numeric variables to help determine their relationships to each other.
+
+
+
+```{R}
+#Visualizing Data
+
+#Correlation Heatmap
+proj_matrix <- proj_nums %>% as.data.frame %>% rownames_to_column("Variable 1") %>% pivot_longer(-1,names_to="Variable 2", values_to="correlation")
+proj_matrix %>% ggplot(aes(`Variable 1`, `Variable 2`, fill=correlation)) + geom_tile()+ scale_fill_gradient2(low="yellow", mid="red", high="dark red") + ggtitle("Correlations of Numerical Variables")
+#High cor between mentions, incidents of aggression and lines but interestingly not between percent aggression and instances of aggression
+
+#Graph 1
+#I adjusted the x and y limits to exclude some of the outliers, who were all Gryffindor, so that the rest of the data could be seen. Even still, Gryffindors and Slytherins had far more mentions and lines.
+library(ggplot2)
+plot1 <- as.data.frame(prop_agg) 
+ggplot(data=plot1, aes(x=Mentions, y=Number_of_Lines, color=House)) + ggtitle("Number of Mentions in Books vs Number of Lines in Films by House in Harry Potter") + geom_smooth(method="lm", aes(group=House, color=House), stat="summary") + geom_point(aes(group=House)) + xlim(1,2500) + ylim(1,500) + theme_light()
+
+
+#Graph 2- figure out how to manually change colors???
+plot2 <- prop_agg %>% na.omit(Percent_Aggression)
+ggplot(data=plot2, aes(x=Character, y=Percent_Aggression, fill=House)) + geom_bar(stat="summary") + theme_light() + scale_y_continuous(breaks=seq(0,15,by=.75)) + theme(axis.text.x = element_text(angle=90, hjust=1)) + ggtitle("Percent Chance of Showing Aggression by Character and House")
+#I removed any characters who did not show any aggressiveness
+  
+
+```
+  The correlation heatmap showed the various correlations between the four numerical variables: the number of times a character was mentioned in the books, the number of lines each character had in the films, the number of aggressive instances each character showed in the books, and the percent chance a character would show aggression if mentioned. There was a high correlation (between 0.75 and 1.0) between the number of aggressive instances, the number of times a character was mentioned in the books, and the number of lines a character had in the films. This makes sense because characters who were important to the books would be mentioned a lot and also have a prominent role in the films. In addition, the more prominent a character is, the more times we would see them showing aggression. However, the percent aggression variable had a correlation between 0.0 and 0.25 with each of the variables. There was a slightly higher correlation between percent aggression and aggressive instances than between percent aggression and the other two numerical variables, showing that the main characters were likely not the most aggressive characters.
+  The line graph showed the relationship between the number of times a character was mentioned in the books and the number lines a character had in the movies broken down by House. Characters noted as having NA for their house are any characters who attended Hogwarts but whose house was unknown or who did not have magic. In addition, there were several Gryffindor data points that skewed the graph so much that is caused the rest of the data to not be seen. As a result, I adjusted the x and y limits of the graph to allow for visualization of the rest of the data. Even so, Gryffindor characters were both mentioned more and had more lines in the films, with Slytherin as the second highest in both, and the rest of the characters were present much less. When this data is grouped by house, there is still a positive correlation between the two variables, although there may be more variance.
+  The bar graph shows individual characters and their percent chance of exhibiting aggressiveness if mentioned. The bars are also colored by house. I excluded characters who showed 0 instances of aggression, who as a result had 0% chance of exhibiting aggression, to allow the more aggressive characters to be seen more clearly. While the two largest percentages were for Slytherin characters, the house with the highest number of aggressive characters was Gryffindor. There was only one Durmstrang student on the graph, but there were not many Durmstrang students present throughout the books. There were also only two Hufflepuff and three Ravenclaw students shown on the graph.
+
+```{R}
+#PCA
+
+#Preparing the data
+prop_agg %>% select(-c(Character, House)) %>% cor(use="pair")
+
+#Computing PC scores
+mypca <- prop_agg %>% select(-c(Character, House)) %>% na.omit() %>% scale() %>% prcomp() 
+mypca
+
+#Choosing number of PCs to keep
+#Picking until cumulative proportion of variance is greater than 80%
+summary(mypca)
+
+#Giving correlation matrix to eigen
+pca2 <- prop_agg %>% select(-c(Character, House)) %>% cor(use="pair") %>% eigen()
+pca2
+
+#Plotting scores to show data with respect to PC1 and PC2
+mypca$x %>% as.data.frame %>%ggplot(aes(PC1,PC2))+geom_point()
+
+#Plot of which variables contribute to which PCs
+mypca$rotation[,1:2]%>%as.data.frame%>%rownames_to_column%>%
+ggplot()+geom_hline(aes(yintercept=0),lty=2)+ geom_vline(aes(xintercept=0),lty=2)+ylab("PC2")+xlab("PC1")+ geom_segment(aes(x=0,y=0,xend=PC1,yend=PC2),arrow=arrow(),col="red")+ geom_label(aes(x=PC1*1.1,y=PC2*1.1,label=rowname)) + ggtitle("Contributions of PC1 and PC2")
+#Mentions seems to be hidden behind number of lines. They are very similar to each other
+
+```
+All relevant steps discussed in class. Visualization of clusters or the first few PCs using ggplot, supporting paragraph or two explaining the results found.
+
+To perform PCA, the data is first prepared by selecting all the numeric variables. 72.01% of the variance is accounted for by PC1, and 97.83% of the variance is accounted for by both PC1 and PC2. Since the cumulative proportion of variance is greater than 80% at PC2, the necessary number of PCs to select is two. The scatterplot shows the data with respect to PC1 and PC2 and shows a few outliers. The plot showing the contributions of PC1 and PC2 show that PC1 mostly explains the the percent chance a character will show aggression while mentioned, while PC2 mostly explains the instances of aggression of a character as written in the books, the number of times a character was mentioned in the books, and the number of lines a character had in the films.The arrow for Mentions seems to be behind the one for Number of Lines because they are very closely correlated.
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

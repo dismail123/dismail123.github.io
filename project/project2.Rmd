@@ -1,0 +1,306 @@
+---
+title: "Project 2"
+output: html_document
+date: "2020-12-05"
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", warning = F, message = F, tidy=T, tidy.opts=list(width.cutoff=50), R.options=list(max.print=100,dplyr.print_max=100))
+
+#HERE'S THE CLASSIFICAITON DIAGNOSTICS FUNCTION
+class_diag<-function(probs,truth){
+  tab<-table(factor(probs>.5,levels=c("FALSE","TRUE")),truth)
+  acc=sum(diag(tab))/sum(tab)
+  sens=tab[2,2]/colSums(tab)[2]
+  spec=tab[1,1]/colSums(tab)[1]
+  ppv=tab[2,2]/rowSums(tab)[2]
+  f1=2*(sens*ppv)/(sens+ppv)
+
+  if(is.numeric(truth)==FALSE & is.logical(truth)==FALSE){
+    truth<-as.numeric(truth)-1}
+  
+  #CALCULATE EXACT AUC
+  ord<-order(probs, decreasing=TRUE)
+  probs <- probs[ord]; truth <- truth[ord]
+  
+  TPR=cumsum(truth)/max(1,sum(truth)) 
+  FPR=cumsum(!truth)/max(1,sum(!truth))
+  
+  dup<-c(probs[-1]>=probs[-length(probs)], FALSE)
+  TPR<-c(0,TPR[!dup],1); FPR<-c(0,FPR[!dup],1)
+  
+  n <- length(TPR)
+  auc<- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+
+  data.frame(acc,sens,spec,ppv,f1,auc)
+}
+
+```
+
+
+```{r, cache=TRUE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+
+#Load data/ Introduce dataset
+HealthInsurance <- read.csv("HealthInsurance.csv", header=TRUE)
+ncol(HealthInsurance)
+nrow(HealthInsurance)
+
+library(glmnet)
+library(lmtest)
+library(plotROC)
+library(pROC)
+```
+
+The HealthInsurance dataset was collected from the Medical Expenditure Panel Survey in 1996. There are 8,802 observations of 11 different variables. The first column, x, just contains a number to represent the distinct participants. The health variable is a self-reported question, where the participant answered yes or no for whether they considered themselves healthy. The age and sex of the participant were also recorded. The insurance, married, and selfemp variables were all yes/no questions for whether they were insured, married, and self-employed respectively. The family variable was a numerical variable for the size of the particpant's family. Both ethnicity and education were categorical variables. Ethnicity indicated whether a person was African American, caucasion, or other. The education variable tells us the highest degree obtained with no degree, GED, high school, bachelor, master, PhD, or other. The region variable contains the categories west, midwest, south, and northeast. In this project, I will be viewing the different relationships among many of these variables.
+
+  
+```{r warning=FALSE, message=FALSE}
+#MANOVA 
+
+# Compute MANOVA across region
+manova_healthins <- manova(cbind(age, family)~region, data=HealthInsurance)
+# ANOVA
+summary.aov(manova_healthins)
+
+#Perform post-hoc tests for the sites that differ
+pairwise.t.test(HealthInsurance$age, HealthInsurance$region,p.adj="none")
+pairwise.t.test(HealthInsurance$family, HealthInsurance$region,p.adj="none")
+
+#Hypothesis tests run
+2*2 + 1 + 2
+#1 MANOVA, 2 ANOVA, 4 t tests
+
+# Type 1 errors
+1-((.95)^7)
+
+#Bonferroni Correction
+.05/7
+
+#MANOVA Assumptions
+#install.packages("rstatix")
+library(rstatix)
+
+group <- HealthInsurance$region 
+DVs <- HealthInsurance %>% select(age, family)
+
+#Test multivariate normality for each group (null: assumption met)
+sapply(split(DVs,group), mshapiro_test)
+
+#If any p<.05, stop (assumption violated). If not, test homogeneity of covariance matrices
+
+#Box's M test (null: assumption met)
+box_m(DVs, group)
+
+#Optionally, view covariance matrices for each group
+lapply(split(DVs,group), cov)
+
+```
+  The MANOVA showed a significant difference in the effect of region on both the number of members in the family and age of the participant. As a result, an individual ANOVA was computed for both age and family size. There was a significant difference in age of the participants between the northeast and midwest, the west and northeast, and the south and west because they all had p-values less than .05. For the same reason, there was a significant difference in family size found between the northwest and midwest regions, the south and midwest regions, the west and midwest regions, and the south and west regions. 
+  There were a total of 7 hypothesis tests run because each of the two post hoc test had 2 tests and there were also 2 ANOVA tests and a MANOVA. As a result, the probability of making an error is 0.3017 and a Bonferroni adjusted significance level of 0.00714 should be used. The multivariate normality assumption and the covariance assumptions were not met.
+  Using the Bonferroni adjusted significance levels, there is a significant difference in the effect of region on age of participants between the northeast and west and the west and south. In addition, there is a significant difference in the effect of region on family size between the midwest and northeast, midwest and south, and the midwest and west.
+ 
+```{R}
+#Randomization Test  
+# F-statistic/ANOVA for age and insured
+
+library(dplyr)
+randtest <- HealthInsurance %>% select(insurance, age)
+
+#Observed F
+summary(aov(age~insurance, data=HealthInsurance))
+obs_F <- 205.4
+
+#null distribution for F
+Fs<-replicate(1000,{
+ new <-HealthInsurance %>%mutate(age=sample(age))
+ SSW<- new%>%group_by(region)%>%summarize(SSW=sum((age-mean(age))^2))%>%
+    summarize(sum(SSW))%>%pull
+  SSB<- new%>%mutate(mean=mean(age))%>%group_by(region)%>%mutate(groupmean=mean(age))%>%
+    summarize(SSB=sum((mean-groupmean)^2))%>%summarize(sum(SSB))%>%pull
+  #Compute f statistic (SSB/k-1)/(N-k)
+  (SSB/1) / (SSW/8800)
+})
+
+#Computing p-value from f-statistic #df1=k-1, df2=N-k
+pf(0.03050547, df1=1, df2=8800, lower.tail=F)
+
+hist(Fs, prob=T); abline(v = obs_F, col="red",add=T)
+
+```
+
+The randomization test performed was an F-statistic/ANOVA to determine the association between whether a participant was insured and their age. The null hypothesis is that there will be no difference in the age of people who are or are not insured. The alternative hypothesis is that there will be a difference in the age of those insured and not insured. The ANOVA test showed a significant difference in what age of participant had health insurance or not (with a p-value of <2e-16) and an F-statistic of 205.4. Next, I simulated the F distribution under the assumption of the null hypothesis. The F-statistic for the null hypothesis was 0.0305. From the large difference in the F-statistic and the histogram (the obs_F does not even show up on the histogram), I may reject the null hypothesis and conclude there is a significant difference in the ages of participants who have or do not have insurance.
+
+```{R}
+#Linear Regression Model
+library(tidyverse)
+HealthIns <- HealthInsurance %>% mutate(health=ifelse(health=="yes", 1,0))
+HealthIns <- HealthInsurance %>% mutate(insurance=ifelse(insurance=="yes", 1,0))
+
+#Building linear regression model
+q2 <- lm(family ~ age*insurance, data=HealthIns)
+summary(q2)
+
+#Mean center
+HealthIns <- HealthIns %>% mutate(family_c = family - mean(family, na.rm = T))
+HealthIns <- HealthIns %>% mutate(age_c = age - mean(age, na.rm = T))
+q2_c <- lm(family_c ~ age_c*insurance, data=HealthIns)
+summary(q2_c)
+
+#Plot regression
+library(ggplot2)
+ggplot(HealthIns, aes(x = age_c, y = family_c, group = insurance)) + 
+  geom_point(aes(color=insurance)) + geom_smooth(method="lm",aes(color=insurance))
+
+#Assumptions
+#homeoskedacity
+resids<-q2_c$residuals
+fitvals<-q2_c$fitted.values 
+ggplot()+geom_point(aes(fitvals,resids))+geom_hline(yintercept=0, color='red')
+
+#normality
+ggplot()+geom_histogram(aes(resids), bins=35)
+
+#linearity
+ggplot()+geom_qq(aes(sample=resids))+geom_qq_line(aes(sample=resids, color='red')) + theme(legend.position = "none")
+
+#Recompute with robust SE
+library(lmtest)
+library(sandwich)
+coeftest(q2_c, vcov=vcovHC(q2_c))
+
+```
+  This model predicts family size of the participant using their age and whether or not they had insurance. An intercept of 0.1703 means that a person of average age with insurance has a family size of 0.1703. The age_c coefficient of -0.02007 means that for every 1 year increase in age, the family size of a participant decreases by 0.02007 while controlling for whether or not a participant has insurance. The insurance coefficient of -0.215599 means that while controlling for age, those with insurance have an average family size of 0.2156 smaller than families without insurance. The age_c:insurance coefficient of 0.003593 means the slope of family size of a participant who has insurance is 0.003593 greater than that for participants without insurance.
+  Based on the graphs, my data seems to meet the homeoskedacity but not normality and linearity assumptions. After recomputing with robust standard errors, the results were the same as before the robust standard errors because the SEs also did not change. With an adjusted R-squared value of 0.02028, my model only explains 2.03% of the variation in outcome.
+
+```{R}
+#Interaction, Bootstrapped SEs 
+set.seed(1234)
+fit<-lm(family_c ~ age_c*insurance, data=HealthIns)
+resids<-fit$residuals 
+fitted<-fit$fitted.values 
+residresamp <- replicate(5000,{
+  new_resids<-sample(resids,replace=TRUE) 
+  HealthIns$new_y<-fitted+new_resids
+  fit<-lm(new_y~insurance*age_c, data = HealthIns) 
+  coef(fit) 
+})
+
+residresamp%>%t%>%as.data.frame%>%summarize_all(sd)
+```
+The bootstrapped model has lower standard errors than the robust model. Lower standard errors indicate higher t-values and lower p-values. The boostrapped intercept of 0.0383 is lower than the robust intercept of 0.1703282, which means boostrapped intercept has a lower standard error, higher t-value, and lower p-value. The boostrapped coefficients for insurance and mean-centered age are also less than the robust coefficients, but the robust age_c:insurance coefficient is 0.0035927, which is slightly smaller than the same boostrapped coefficient of 0.00364392. For the insurance:age_c variable, the boostrapped coefficient has a higher standard error, and so a lower t-value and higher p-value. As the p-value increases, it is more likely that the null hypothesis can be rejected. 
+
+
+```{R}
+#Logistic Regression with Binary Variable 
+library(plotROC)
+
+#Regression
+newins <- as.data.frame(HealthInsurance)
+newins1 <- newins %>% mutate(y = ifelse(insurance == "yes", 1,0))
+newins1 <- newins1 %>% mutate(married = ifelse(married == "yes", 1,0))
+newins1 <- newins1 %>% mutate(selfemp = ifelse(selfemp == "yes", 1,0)) 
+
+glmfit<-glm(y~married+selfemp, data=newins1, family="binomial")
+#glmfit <- glm(y ~ ., data = newins1, family = "binomial")
+coeftest(glmfit)
+
+exp(coef(glmfit))%>%data.frame()
+
+#Confusion Matrix
+prob <- predict(glmfit, type="response") 
+table(truth=newins1$y,prediction=as.numeric(prob>.52)) %>% addmargins
+
+#Accuracy
+(136 + 6924)/8802
+
+#Sensitivity TPR
+6924/8538
+
+#Precision PPV
+6924/8538
+
+#Specificity TNR
+136/264
+
+#AUC
+class_diag(prob, newins1$y)
+
+#Density plot
+library(ggplot2)
+ggplot(newins1, aes(predict(glmfit), fill=y)) + geom_density(alpha=0.3) + geom_vline(xintercept=0, lty=2)
+
+#ROC curve
+library(plotROC)
+myROC <- ggplot(newins1) + geom_roc(aes(d=y, m=prob), n.cuts=0) + geom_segment(aes(x=0, xend=1, y=0, yend=1), lty=2)
+myROC
+
+calc_auc(myROC)
+
+```
+  The binary variable I chose was insurance, where participants answered yes or no to whether or not they had health insurance. My logistic regression showed the effects of marriage and self-employment on whether a participant had insurance. 
+  The intercept was 2.66, which means the predicted odds of not having insurance when not married and not self-employed 2.66. Controlling for self-employment, the predicted odds of having employment increases by 2.69 for every year of marriage. Controlling for marriage, the predicted odds of having health insurance increases by 0.408 for every year of self-employment. 
+  According to the confusion matrix, my model had an accuracy of 0.802, which means its predictions are correct 80.2% of the time. The sensitivity was 0.811, which means the proportion of participants with insurance that were correctly predicted to have insurance was 0.811. The probability of predicting a participant without insurance has insurance is 51.5% of the time since the specificity was 0.515. The precision was 0.811, so this is the proportion of participants classified as not having insurance who do not have insurance. 
+  The AUC of the model is 0.6354, which is considered a poor predictor of whether or not a person is insured because it is between .6 and .7. In addition, the ROC curve, which shows the relationship between sensitivity and specificity, is somewhat linear but not completely. A completely linear AUC would be considered bad, so my ROC curve seems to confirm that the AUC is poor, but not bad. 
+
+```{R}
+#Binary Response & Rest of Variables 
+#Logistic Regression
+finalfit <- glm(y~age+family+gender+education+married+health,data=newins1,family="binomial")
+finalprob <- predict(finalfit, data="response")
+class_diag(finalprob, newins1$y)
+
+# 10 Fold CV
+set.seed(1234)
+k=10
+data<-newins1[sample(nrow(newins1)),] 
+folds<-cut(seq(1:nrow(data)),breaks=k,labels=F)
+diags<-NULL
+for(i in 1:k){
+  train<-data[folds!=i,]
+  test<-data[folds==i,]
+  truth<-test$y
+  fit<-glm(y~age+family+gender+education+married+health,data=newins1,family="binomial")
+  probs<-predict(fit,newdata = test,type="response")
+  diags<-rbind(diags,class_diag(probs,truth))
+}
+summarize_all(diags,mean)
+
+#Lasso
+y <- as.matrix(newins1$y)
+x <- model.matrix(y~age+family+gender+education+married+health,data=newins1,family="binomial")[, -1]
+x <- scale(x)
+cv <- cv.glmnet(x, y, family = "binomial")
+lasso_fit <- glmnet(x, y, family = "binomial", lambda = cv$lambda.1se)
+coef(lasso_fit)
+
+#10 Fold with lasso variables
+#create dummies for nonzero variables not part of original data
+newinss <- newins1 %>% mutate(gendermale=ifelse(newins1$gender=="male",1,0),
+  educationged =ifelse(newins1$education=="ged",1,0), 
+  educationhighschool =ifelse(newins1$education=="highschool",1,0),
+  educationmaster =ifelse(newins1$education=="master",1,0),
+  educationnone = ifelse(newins1$education=="none",1,0))
+
+set.seed(1234)
+k=10
+data<-newinss[sample(nrow(newins1)),] 
+folds<-cut(seq(1:nrow(data)),breaks=k,labels=F)
+diags<-NULL
+for(i in 1:k){
+  train<-data[folds!=i,]
+  test<-data[folds==i,]
+  truth<-test$y
+  fit<-glm(y~age+family+gendermale+educationged+educationhighschool+educationmaster+educationnone+married,data=newinss,family="binomial")
+  probs<-predict(fit,newdata = test,type="response")
+  diags<-rbind(diags,class_diag(probs,truth))
+}
+summarize_all(diags,mean)
+ 
+
+```
+  This logistic regression showed the effects of age, family, gender, education, marriage, and health on whether or not a participant has health insurance. 
+  The fit model logistic regression with the 6 variables and the insurance variable had an accuracy of .7998, so its predictions are correct 79.98% of the time. The sensitivity was .925, so the proportion of participants who had insurance and were correctly predicted to have insurance was 92.5%. The specificity was .295, which means 29.5% of the time, participants were predicted to have insurance when they did not have it. With a precision of .841, this represents the proportion who did not have insurance and were correctly classified as not having insurance. The AUC was 0.7345, which is considered fair because it is between .7 and .8. 
+  The 10-fold CV had an accuracy of .8083, so the predictions of the model are correct 80.83% of the time. The sensitivity was 97.5%, so this is the probability that participants who had insurance were correctly identified. The specificity was 13.9%, so this is the probability that participants were predicted to have insurance when they did not have it. The precision was 82.0%, so this was the proportion of participants correctly identified as not having insurance. The AUC was 0.7346, which is considered fair and is very similar to the AUC from the fit model.
+  After performing a LASSO on the model, the significant variables are age, family, gendermale, educationged, educationhighschool, educationmaster, educationnone, and married. It seems education is an important predictor at all levels except for PhD and other. In addition, the health of the participant was not an important indicator.
+  The 10-fold CV with only the variables from the LASSO had an AUC of 0.7329, which is considered fair and is very close to (but slightly lower than) the AUC from the fit model regression and the 10-fold CV from before the LASSO. This is typically an indication of overfitting. However, the out of sample AUC was poor (0.6354), so the in-sample model is overall better at predicting whether a participant has health insurance or not.
